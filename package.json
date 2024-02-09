@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "fund": "^1.0.0",
+    "jsonwebtoken": "^9.0.2",
     "md5": "^2.3.0",
     "mongoose": "^8.1.1",
     "next": "14.1.0",
@@ -17,6 +18,7 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.5",
     "@types/md5": "^2.3.5",
     "@types/node": "^20",
     "@types/react": "^18",

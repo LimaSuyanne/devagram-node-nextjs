@@ -1,26 +1,40 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import {conectarMongoDB} from '../../middlewares/conectarMongoDB';
-import type {RespostaPadraoMsg} from '../../types/RespostaPadraoMsg';
+import { conectarMongoDB } from '../../middlewares/conectarMongoDB';
 import md5 from "md5";
+import type { RespostaPadraoMsg } from "@/types/RespostaPadraoMsg";
+import type { LoginResposta } from '../../types/LoginResposta';
 import { UsuarioModel } from "@/models/UsuarioModel";
+import jwt from 'jsonwebtoken';
 
 // eslint-disable-next-line import/no-anonymous-default-export
 const endpointLogin = async (
    req: NextApiRequest,
-   res: NextApiResponse <RespostaPadraoMsg>
-) => { 
-   if(req.method === 'POST'){
-      const {login, senha} = req.body;
+   res: NextApiResponse<RespostaPadraoMsg | LoginResposta>
+) => {
 
-      const usuariosEncontrado = await UsuarioModel.find({email : login, senha : md5(senha)});
-      if(usuariosEncontrado && usuariosEncontrado.length > 0){
-         const usuarioEncontrado = usuariosEncontrado[0];
-           return res.status(200).json({msg : `Usuário ${usuarioEncontrado.nome} autenticado com sucesso`});
-
-         }
-         return res.status(400).json({erro : 'Usuário ou senha não encontrado'});
+   const { MINHA_CHAVE_JWT } = process.env;
+   if (!MINHA_CHAVE_JWT) {
+      res.status(500).json({ erro: 'ENV JWT não informada' });
    }
-   return res.status(405).json({erro : 'Metodo informado não é válido'});
+
+   if (req.method === 'POST') {
+      const { login, senha } = req.body;
+
+      const usuariosEncontrado = await UsuarioModel.find({ email: login, senha: md5(senha) });
+      if (usuariosEncontrado && usuariosEncontrado.length > 0) {
+         const usuarioEncontrado = usuariosEncontrado[0];
+
+         const token = jwt.sign({_id : usuarioEncontrado._id}, MINHA_CHAVE_JWT);
+         return res.status(200).json({
+            nome: usuarioEncontrado.nome,
+            email: usuarioEncontrado.email,
+            token
+         });
+
+      }
+      return res.status(400).json({ erro: 'Usuário ou senha não encontrado' });
+   }
+   return res.status(405).json({ erro: 'Metodo informado não é válido' });
 }
 
 export default conectarMongoDB(endpointLogin);
